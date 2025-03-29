@@ -54,6 +54,21 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+
+			if (words.length > 1){
+				KEY.set(words[0]);
+				for (int i = 1; i < words.length; i++) {
+					String current_word = words[i];
+					// Skip empty words
+					if (current_word.length() == 0) {
+						continue;
+					}
+					STRIPE.increment(current_word);
+					context.write(KEY, STRIPE);
+					KEY.set(current_word);
+					STRIPE.clear();
+				}
+			}
 		}
 	}
 
@@ -75,6 +90,28 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			Iterator<HashMapStringIntWritable> iter = stripes.iterator();
+	                String left_w = key.toString();
+	                while (iter.hasNext()) {
+	                    SUM_STRIPES.plus(iter.next());
+	                }
+	
+	                for (Entry<String, Integer> mapElement : SUM_STRIPES.entrySet()) {
+	                    String right_w = (String) mapElement.getKey();
+	                    int value = (int) mapElement.getValue();
+	                    BIGRAM.set(left_w, right_w);
+	                    if (right_w.equals("")) {
+	                        totalCount.set(value);
+	                        FREQ.set((float) value);
+	                    } else {
+	                        FREQ.set((float) ((float) value / (float) totalCount.get()));
+	                    }
+	                    context.write(BIGRAM, FREQ);
+	                }
+	
+	                SUM_STRIPES.clear();
+
+					
 		}
 	}
 
@@ -94,6 +131,18 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			Iterator<HashMapStringIntWritable> iter = stripes.iterator();
+            		String first_w = key.toString();
+            		while (iter.hasNext()) {
+                		SUM_STRIPES.inrement(iter.next());
+            		}
+
+            		context.write(key, SUM_STRIPES);
+
+            		SUM_STRIPES.clear();
+
+			
+				
 		}
 	}
 
