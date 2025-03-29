@@ -104,9 +104,9 @@ context.write(key, VALUE);
     				sum += val.get();
 			}
 
-// Emit the summed value for each bigram
-SUM.set(sum);
-context.write(key, SUM);
+			// Emit the summed value for each bigram
+			SUM.set(sum);
+			context.write(key, SUM);
 		}
 	}
 
