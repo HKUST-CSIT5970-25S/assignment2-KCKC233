@@ -132,7 +132,7 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 			 * TODO: Your implementation goes here.
 			 */
 			Iterator<HashMapStringIntWritable> iter = stripes.iterator();
-            		String first_w = key.toString();
+            		String left_w = key.toString();
             		while (iter.hasNext()) {
                 		SUM_STRIPES.inrement(iter.next());
             		}
