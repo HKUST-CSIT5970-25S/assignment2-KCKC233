@@ -54,10 +54,21 @@ public class BigramFrequencyPairs extends Configured implements Tool {
 			 * TODO: Your implementation goes here.
 			 */
 
-			for (int i = 0; i < words.length - 1; i++) {
-    				BIGRAM.set(words[i], words[i + 1]); // set bigram pair
-    				context.write(BIGRAM, ONE); // Emit the bigram with count 1
-			}
+			if (words.length > 1) {
+	                    String p = words[0];
+	                    for (int i = 1; i < words.length; i++) {
+	                    	String w = words[i];
+	                    	// Skip empty words
+		                if (w.length() == 0) {
+		                    continue;
+		                }
+		                BIGRAM.set(p, "");
+		                context.write(BIGRAM, ONE);
+		                BIGRAM.set(p, w);
+		                context.write(BIGRAM, ONE);
+		                p = w;
+		            }
+            		}
 		}
 	}
 
@@ -76,15 +87,20 @@ public class BigramFrequencyPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			
 			int sum = 0;
 			// Sum the counts for each bigram
 			for (IntWritable val : values) {
     				sum += val.get();
 			}
-
-// Set the frequency value and write to the context
-VALUE.set((float) sum);
-context.write(key, VALUE);
+			
+			if (key.getRightElement().equals("")) {
+                		totalCount.set(sum);
+                		VALUE.set((float) sum);
+            		} else {
+                	    VALUE.set(((float) (float) sum / (float) totalCount.get()));
+            		  }
+            		context.write(key, VALUE);
 		}
 	}
 	
