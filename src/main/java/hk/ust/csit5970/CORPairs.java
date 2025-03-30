@@ -53,6 +53,19 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			while (doc_tokenizer.hasMoreTokens()) {
+                		String word = doc_tokenizer.nextToken();
+                		if (word_set.containsKey(word)) {
+                    			word_set.put(word, word_set.get(word) + 1);
+                		} 
+				else {
+                    			word_set.put(word, 1);
+                		}
+           		}
+
+            		for (Map.Entry<String, Integer> entry : word_set.entrySet()) {
+                		context.write(new Text(entry.getKey()), new IntWritable(entry.getValue()));
+            		}
 		}
 	}
 
@@ -66,6 +79,13 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			int sum = 0;
+        		// Sum the counts for each word
+        		for (IntWritable val : values) {
+            			sum += val.get();
+        		}
+
+        		context.write(key, new IntWritable(sum));  // Emit the word with its total frequency
 		}
 	}
 
@@ -81,6 +101,31 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			HashSet<String> uniqueWords = new HashSet<String>();
+            		while (doc_tokenizer.hasMoreTokens()) {
+                		uniqueWords.add(doc_tokenizer.nextToken());
+            		}
+
+			
+            		List<String> wordList = new ArrayList<String>(uniqueWords);
+            		for (int i = 0; i < wordList.size(); i++) {
+                		for (int j = i + 1; j < wordList.size(); j++) {
+		                    String w1 = wordList.get(i);
+		                    String w2 = wordList.get(j);
+		                    
+		                  
+		                    if (w1.compareTo(w2) < 0) {
+		                        WORD_PAIR.set(w1, w2);
+		                    } else {
+		                        WORD_PAIR.set(w2, w1);
+		                    }
+		                    context.write(WORD_PAIR, ONE);
+                		}	
+            		}
+
+
+
+			
 		}
 	}
 
@@ -93,6 +138,11 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			int sum = 0;
+            		for (IntWritable value : values) {
+                		sum += value.get();
+            		}
+            		context.write(key, new IntWritable(sum));
 		}
 	}
 
@@ -145,6 +195,18 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			int sum = 0;
+            		for (IntWritable value : values) {
+                		sum += value.get();
+            		}
+
+	                Integer left_word = word_total_map.get(key.getLeftElement());
+	                Integer right_word = word_total_map.get(key.getRightElement());
+	
+	                if (left_word != null && right_word != null && left_word > 0 && right_word > 0) {
+	                    double correlation = (double) sum / (left_word * right_word);
+	                    context.write(key, new DoubleWritable(correlation));
+	                }
 		}
 	}
 
