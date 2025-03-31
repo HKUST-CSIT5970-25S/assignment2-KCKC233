@@ -81,6 +81,7 @@ public class BigramFrequencyPairs extends Configured implements Tool {
 		// Reuse objects.
 		private final static FloatWritable VALUE = new FloatWritable();
 
+		private IntWritable TOTAL = new IntWritable();
 		@Override
 		public void reduce(PairOfStrings key, Iterable<IntWritable> values,
 				Context context) throws IOException, InterruptedException {
@@ -95,10 +96,10 @@ public class BigramFrequencyPairs extends Configured implements Tool {
 			}
 			
 			if (key.getRightElement().equals("")) {
-                		totalCount.set(sum);
+                		TOTAL.set(sum);
                 		VALUE.set((float) sum);
             		} else {
-                	    VALUE.set(((float) (float) sum / (float) totalCount.get()));
+                	    VALUE.set(((float) (float) sum / (float) TOTAL.get()));
             		  }
             		context.write(key, VALUE);
 		}
