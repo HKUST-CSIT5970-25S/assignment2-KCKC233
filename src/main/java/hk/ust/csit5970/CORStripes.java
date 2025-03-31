@@ -43,6 +43,19 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			while (doc_tokenizer.hasMoreTokens()) {
+                		String word = doc_tokenizer.nextToken();
+                		if (word_set.containsKey(word)) {
+                    			word_set.put(word, word_set.get(word) + 1);
+                		} 
+				else {
+                    			word_set.put(word, 1);
+               		 	}
+            		}
+
+            		for (Map.Entry<String, Integer> entry : word_set.entrySet()) {
+               			context.write(new Text(entry.getKey()), new IntWritable(entry.getValue()));
+            		}
 		}
 	}
 
@@ -56,6 +69,11 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			int sum = 0;
+            		for (IntWritable val : values) {
+                		sum += val.get();
+            		}
+            		context.write(key, new IntWritable(sum));
 		}
 	}
 
@@ -69,12 +87,27 @@ public class CORStripes extends Configured implements Tool {
 			// Please use this tokenizer! DO NOT implement a tokenizer by yourself!
 			String doc_clean = value.toString().replaceAll("[^a-z A-Z]", " ");
 			StringTokenizer doc_tokenizers = new StringTokenizer(doc_clean);
+			MapWritable writemap = new MapWritable();
 			while (doc_tokenizers.hasMoreTokens()) {
 				sorted_word_set.add(doc_tokenizers.nextToken());
 			}
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			for (String word : sorted_word_set) {
+                		for (String countword : sorted_word_set) {
+		                    if (!word.equals(countword)) {
+		                        IntWritable count = (IntWritable) writemap.get(new Text(countword));
+		                        if (count == null) {
+		                            writemap.put(new Text(countword), new IntWritable(1));
+		                        } else {
+		                            count.set(count.get() + 1);
+		                        }
+		                    }
+		                }
+	                	context.write(new Text(word), writemap);
+	               		writemap.clear();
+	                }
 		}
 	}
 
@@ -89,6 +122,20 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+			MapWritable writemap = new MapWritable();
+	                for (MapWritable value : values) {
+	                    for (Map.Entry<Writable, Writable> entry : value.entrySet()) {
+	                        IntWritable count = (IntWritable) entry.getValue();
+	                        IntWritable exist = (IntWritable) writemap.get(entry.getKey());
+	                        if (exist == null) {
+	                            writemap.put(entry.getKey(), new IntWritable(count.get()));
+	                        } 
+				else {
+	                            exist.set(exist.get() + count.get());
+	                        }
+	                    }
+	                }
+	                context.write(key, writemap);
 		}
 	}
 
@@ -142,6 +189,38 @@ public class CORStripes extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
+
+			double TOTAL = 0.0;
+            		Map<String, Integer> cooccurrence = new HashMap<String, Integer>();
+
+	            	for (MapWritable value : values) {
+	                	for (Writable coWord : value.keySet()) {
+	                    	IntWritable count = (IntWritable) value.get(coWord);
+	                    	String coWordStr = coWord.toString();
+	
+	                    	// Update cooccurrence map without using getOrDefault
+	                    	if (cooccurrence.containsKey(coWordStr)) {
+	                        	cooccurrence.put(coWordStr, cooccurrence.get(coWordStr) + count.get());
+	                    	} 
+				else {
+	                        	cooccurrence.put(coWordStr, count.get());
+	                    	}
+	                	}	
+	                	TOTAL++; // Count occurrences of the current key
+	            	}
+	
+	            	// Calculate correlation coefficient for each co-occurring word
+	            	for (Map.Entry<String, Integer> entry : cooccurrence.entrySet()) {
+	                	String coWord = entry.getKey();
+	                	int coFreq = entry.getValue();
+	                	int totalFreq = word_total_map.containsKey(coWord) ? word_total_map.get(coWord) : 0;
+	
+	                	// Ensure TOTAL and totalFreq are not zero to avoid division by zero
+	                	if (TOTAL > 0 && totalFreq > 0) {
+	                    	double correlation = (double) coFreq / (TOTAL * totalFreq);
+	                    	context.write(new PairOfStrings(key.toString(), coWord), new DoubleWritable(correlation));
+	                	}
+	            	}
 		}
 	}
 
