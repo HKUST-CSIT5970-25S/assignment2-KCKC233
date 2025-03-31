@@ -1,4 +1,4 @@
-package hk.ust.csit5970;
+gackage hk.ust.csit5970;
 
 import org.apache.commons.cli.*;
 import org.apache.hadoop.conf.Configuration;
