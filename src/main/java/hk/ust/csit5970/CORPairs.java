@@ -43,10 +43,11 @@ public class CORPairs extends Configured implements Tool {
 	 */
 	private static class CORMapper1 extends
 			Mapper<LongWritable, Text, Text, IntWritable> {
+		
 		@Override
 		public void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
-			HashMap<String, Integer> word_set = new HashMap<String, Integer>();
+			HashMap<String, Integer> Set_word = new HashMap<String, Integer>();
 			// Please use this tokenizer! DO NOT implement a tokenizer by yourself!
 			String clean_doc = value.toString().replaceAll("[^a-z A-Z]", " ");
 			StringTokenizer doc_tokenizer = new StringTokenizer(clean_doc);
@@ -55,15 +56,15 @@ public class CORPairs extends Configured implements Tool {
 			 */
 			while (doc_tokenizer.hasMoreTokens()) {
                 		String word = doc_tokenizer.nextToken();
-                		if (word_set.containsKey(word)) {
-                    			word_set.put(word, word_set.get(word) + 1);
+                		if (Set_word.containsKey(word)) {
+                    			Set_word.put(word, Set_word.get(word) + 1);
                 		} 
 				else {
-                    			word_set.put(word, 1);
+                    			Set_word.put(word, 1);
                 		}
            		}
 
-            		for (Map.Entry<String, Integer> entry : word_set.entrySet()) {
+            		for (Map.Entry<String, Integer> entry : Set_word.entrySet()) {
                 		context.write(new Text(entry.getKey()), new IntWritable(entry.getValue()));
             		}
 		}
@@ -94,6 +95,8 @@ public class CORPairs extends Configured implements Tool {
 	 * TODO: Write your second-pass Mapper here.
 	 */
 	public static class CORPairsMapper2 extends Mapper<LongWritable, Text, PairOfStrings, IntWritable> {
+		private final static IntWritable ONE = new IntWritable(1);
+        	private final static PairOfStrings pair = new PairOfStrings();
 		@Override
 		protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			// Please use this tokenizer! DO NOT implement a tokenizer by yourself!
@@ -115,11 +118,11 @@ public class CORPairs extends Configured implements Tool {
 		                    
 		                  
 		                    if (w1.compareTo(w2) < 0) {
-		                        WORD_PAIR.set(w1, w2);
+		                        pair.set(w1, w2);
 		                    } else {
-		                        WORD_PAIR.set(w2, w1);
+		                        pair.set(w2, w1);
 		                    }
-		                    context.write(WORD_PAIR, ONE);
+		                    context.write(pair, ONE);
                 		}	
             		}
 
@@ -195,16 +198,16 @@ public class CORPairs extends Configured implements Tool {
 			/*
 			 * TODO: Your implementation goes here.
 			 */
-			int sum = 0;
+			int Total = 0;
             		for (IntWritable value : values) {
-                		sum += value.get();
+                		Total += value.get();
             		}
 
 	                Integer left_word = word_total_map.get(key.getLeftElement());
 	                Integer right_word = word_total_map.get(key.getRightElement());
 	
 	                if (left_word != null && right_word != null && left_word > 0 && right_word > 0) {
-	                    double correlation = (double) sum / (left_word * right_word);
+	                    double correlation = (double) Total / (left_word * right_word);
 	                    context.write(key, new DoubleWritable(correlation));
 	                }
 		}
