@@ -82,7 +82,8 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 		private final static HashMapStringIntWritable SUM_STRIPES = new HashMapStringIntWritable();
 		private final static PairOfStrings BIGRAM = new PairOfStrings();
 		private final static FloatWritable FREQ = new FloatWritable();
-
+		private IntWritable TOTAL = new IntWritable();
+		
 		@Override
 		public void reduce(Text key,
 				Iterable<HashMapStringIntWritable> stripes, Context context)
@@ -101,10 +102,10 @@ public class BigramFrequencyStripes extends Configured implements Tool {
 	                    int value = (int) mapElement.getValue();
 	                    BIGRAM.set(left_w, right_w);
 	                    if (right_w.equals("")) {
-	                        totalCount.set(value);
+	                        TOTAL.set(value);
 	                        FREQ.set((float) value);
 	                    } else {
-	                        FREQ.set((float) ((float) value / (float) totalCount.get()));
+	                        FREQ.set((float) ((float) value / (float) TOTAL.get()));
 	                    }
 	                    context.write(BIGRAM, FREQ);
 	                }
